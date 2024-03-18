@@ -1,0 +1,56 @@
+//
+// Created by toor on 11/14/23.
+//
+
+#ifndef ATOM_APPLICATION_H
+#define ATOM_APPLICATION_H
+#include "ATOM/atompch.h"
+#include "ATOM/Core/Logging/Logging.h"
+#include <opencv2/opencv.hpp>
+#include "Networking/Server.h"
+#include "ATOM/Core/VideoServer/Frame.h"
+#include "ATOM/Core/ServerLayer.h"
+
+
+
+namespace Atom {
+    typedef struct CameraUsers {
+        std::string ip;
+        bool IsCreatedVideoWriter = false;
+    } CameraUsers;
+
+
+
+    class Application {
+    public:
+        Application();
+        ~Application();
+        void Run();
+
+        void PushLayer(Layer* layer);
+        void PushOverlay(Layer* layer);
+
+        static Application* s_Instance;
+        inline static Application& GetApp() { return *s_Instance; }
+        void WindowClose();
+
+    private:
+        static void SignalHandler(int signal);
+    private:
+
+        LayerStack m_LayerStack;
+        bool m_IsRuning = true;
+        std::chrono::time_point<std::chrono::high_resolution_clock> m_LastTime = std::chrono::high_resolution_clock::now();
+        std::chrono::milliseconds m_Interval; // 250 ms
+        std::vector<CameraUsers> m_CameraUsers;
+        bool m_IsCameraOpen = false;
+        Atom::ServerLayer* m_ServerLayer;
+        Frame* m_Frame;
+
+
+    };
+}
+
+
+
+#endif //ATOM_APPLICATION_H
