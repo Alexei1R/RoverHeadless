@@ -72,7 +72,7 @@ namespace Atom {
     void Frame::OpenCamera(std::string source, int apiPreference) {
         // std::string pipeline = "v4l2src device=/dev/video0 ! video/x-raw,format=YUY2,width=640,height=480,framerate=30/1 ! videoconvert ! appsink";
         // cap.open(pipeline, cv::CAP_GSTREAMER);
-        cap.open(source, apiPreference);
+        cap.open(source);
         if (!cap.isOpened()) {
             ATLOG_WARN("Error opening the camera");
         }

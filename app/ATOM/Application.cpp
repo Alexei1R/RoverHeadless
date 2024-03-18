@@ -92,11 +92,6 @@ namespace Atom {
 
     void Application::Run() {
         while (m_IsRuning) {
-            //print fps
-            int fps = 1000 / m_Interval.count();
-            std::cout << "FPS: " << fps << std::endl;
-
-
             for (Layer* layer: m_LayerStack) {
                 layer->OnUpdate();
             }
