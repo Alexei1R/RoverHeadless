@@ -70,7 +70,7 @@ namespace Atom {
                     std::pair<std::string, std::string> sources = extractStrings(pipeline);
                     ATLOG_INFO("First source: {0}", sources.first);
                     ATLOG_INFO("Second source: {0}", sources.second);
-                    m_Frame->OpenCameras(sources.first, sources.second);
+                     m_Frame->Open2Cameras(sources.first, sources.second);
                 } else {
                     ATLOG_INFO("Opening camera with pipeline: {0}", pipeline);
                     m_Frame->OpenCamera(pipeline);

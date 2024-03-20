@@ -16,7 +16,7 @@ namespace Atom {
         ~Frame();
 
         void OpenCamera(std::string source,int apiPreference = cv::CAP_ANY);
-        void OpenCameras(std::string source1, std::string source2, int apiPreference = cv::CAP_ANY);
+        void Open2Cameras(std::string source1,std::string source2,int apiPreference = cv::CAP_ANY);
 
         virtual void OnAttach() override;
         virtual void OnDetach() override;
@@ -27,8 +27,7 @@ namespace Atom {
         void RemoveVideoWriterWithIP(std::string ip);
     private:
         void VideoProcessingThread();
-        //procesing thread for 2 cameras
-        void VideoProcessingThreadFor2Cameras();
+
 
     private:
 
@@ -43,7 +42,7 @@ namespace Atom {
         cv::VideoCapture cap2;
         std::vector<cv::VideoWriter> m_VideoWriters;
 
-
+        bool m_TwoCameras = false;
 
 
 

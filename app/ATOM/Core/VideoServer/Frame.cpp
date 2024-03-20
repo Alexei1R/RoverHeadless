@@ -20,10 +20,9 @@ namespace Atom {
 
     void Frame::PushNewVideoWriterWithIP(std::string ip) {
         m_VideoWriters.push_back(cv::VideoWriter(
-                "appsrc ! videoconvert ! video/x-raw,format=I420 ! jpegenc ! rtpjpegpay ! udpsink host=" + ip +
-                " port=5000",
-                0, cap.get(cv::CAP_PROP_FPS),
-                cv::Size(m_FrameWidth, m_FrameHeight), true));
+                    "appsrc ! videoconvert ! video/x-raw,format=I420 ! jpegenc ! rtpjpegpay ! udpsink host=" + ip + " port=5000",
+                    0, cap.get(cv::CAP_PROP_FPS),
+                    cv::Size(m_FrameWidth,m_FrameHeight), true));
     }
 
     void Frame::RemoveVideoWriterWithIP(std::string ip) {
@@ -41,6 +40,10 @@ namespace Atom {
     void Frame::OnDetach() {}
 
     void Frame::OnUpdate() {
+        // if (!frame.empty()) {
+        //     cv::imshow("Frame", frame);
+        //     cv::waitKey(1);
+        // }
     }
 
     void Frame::OnFixedUpdate() {}
@@ -53,15 +56,27 @@ namespace Atom {
                 std::cout << "End of video stream or file" << std::endl;
                 break;
             }
-            //show frame
-            cv::imshow("Frame", localFrame);
             cv::resize(localFrame, localFrame, cv::Size(m_FrameWidth, m_FrameHeight));
+            if (m_TwoCameras) {
+                cv::Mat localFrame2;
+                cap2 >> localFrame2;
+                if (localFrame2.empty()) {
+                    std::cout << "End of video stream or file" << std::endl;
+                    break;
+                }
+                cv::resize(localFrame2, localFrame2, cv::Size(m_FrameWidth, m_FrameHeight));
+                //put the frame to on the right side of the frame
+                cv::hconcat(localFrame, localFrame2, localFrame);
+                //resize the frame to the original size
+                cv::resize(localFrame, localFrame, cv::Size(m_FrameWidth, m_FrameHeight));
+            }
+
             {
                 std::lock_guard<std::mutex> guard();
                 frame = localFrame.clone();
             }
             if (m_VideoWriters.size() > 0) {
-                for (auto &writer: m_VideoWriters) {
+                for (auto& writer: m_VideoWriters) {
                     writer.write(localFrame);
                 }
             }
@@ -71,51 +86,23 @@ namespace Atom {
     void Frame::OpenCamera(std::string source, int apiPreference) {
         // std::string pipeline = "v4l2src device=/dev/video0 ! video/x-raw,format=YUY2,width=640,height=480,framerate=30/1 ! videoconvert ! appsink";
         // cap.open(pipeline, cv::CAP_GSTREAMER);
-        cap.open(source , apiPreference);
+        cap.open(source, apiPreference);
         if (!cap.isOpened()) {
             ATLOG_WARN("Error opening the camera");
         }
 
-
-    }
-
-    void Frame::OpenCameras(std::string source1, std::string source2, int apiPreference) {
-        cap.open(source1 , apiPreference);
-        cap2.open(source2 , apiPreference);
-        if (!cap.isOpened() || !cap2.isOpened()) {
-            ATLOG_WARN("Error opening the camera");
-        }
-
         m_VideoThread = std::thread(&Frame::VideoProcessingThread, this);
+
     }
 
-    void Frame::VideoProcessingThreadFor2Cameras() {
-        //read 2 cameras and combine them in one frame
-        while (m_ThreadIsRunning) {
-            cv::Mat localFrame;
-            cv::Mat localFrame2;
-            cap >> localFrame;
-            cap2 >> localFrame2;
-            if (localFrame.empty() || localFrame2.empty()) {
-                std::cout << "End of video stream or file" << std::endl;
-                break;
-            }
-            cv::resize(localFrame, localFrame, cv::Size(m_FrameWidth, m_FrameHeight));
-            cv::resize(localFrame2, localFrame2, cv::Size(m_FrameWidth, m_FrameHeight));
-            cv::hconcat(localFrame, localFrame2, localFrame);
-            cv::resize(localFrame, localFrame, cv::Size(m_FrameWidth, m_FrameHeight));
-            {
-                std::lock_guard<std::mutex> guard();
-                frame = localFrame.clone();
-            }
-            if (m_VideoWriters.size() > 0) {
-                for (auto &writer: m_VideoWriters) {
-                    writer.write(localFrame);
-                }
-            }
+    void Frame::Open2Cameras(std::string source1, std::string source2, int apiPreference) {
+        cap.open(source1, apiPreference);
+        cap2.open(source2, apiPreference);
+        if (!cap.isOpened() || !cap2.isOpened()) {
+            ATLOG_WARN("Error opening one of the cameras");
         }
+        m_TwoCameras = true;
+        m_VideoThread = std::thread(&Frame::VideoProcessingThread, this);
 
     }
-
-
 }
