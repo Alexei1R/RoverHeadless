@@ -4,6 +4,7 @@
 
 #ifndef ATOM_ATOMPCH_H
 #define ATOM_ATOMPCH_H
+#include <regex>
 
 #include <iostream>
 #include <memory>

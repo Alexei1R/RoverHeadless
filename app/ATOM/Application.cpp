@@ -8,6 +8,21 @@
 namespace Atom {
     Application* Application::s_Instance = nullptr;
 
+    std::pair<std::string, std::string> extractStrings(const std::string& message) {
+        std::string firstString, secondString;
+
+        size_t firstPos = message.find('%');
+        size_t secondPos = message.find('%', firstPos + 1);
+        size_t thirdPos = message.find('$', secondPos + 1);
+
+        if (firstPos != std::string::npos && secondPos != std::string::npos && thirdPos != std::string::npos) {
+            firstString = message.substr(firstPos + 1, secondPos - firstPos - 3);
+            secondString = message.substr(secondPos + 1, thirdPos - secondPos - 1);
+        }
+
+        return {firstString, secondString};
+    }
+
     Application::Application() {
         signal(SIGINT, Application::SignalHandler);
         signal(SIGTERM, Application::SignalHandler);
@@ -51,7 +66,20 @@ namespace Atom {
             std::string pipeline = (char*)message.payload;
             ATLOG_INFO("Message Received: ID = 50 {0}", pipeline);
             if(!m_IsCameraOpen) {
-                m_Frame->OpenCamera(pipeline);
+                if (pipeline[0] == '#') {
+                    std::pair<std::string, std::string> sources = extractStrings(pipeline);
+                    ATLOG_INFO("First source: {0}", sources.first);
+                    ATLOG_INFO("Second source: {0}", sources.second);
+                    m_Frame->OpenCameras(sources.first, sources.second);
+                } else {
+                    ATLOG_INFO("Opening camera with pipeline: {0}", pipeline);
+                    m_Frame->OpenCamera(pipeline);
+                }
+
+
+
+
+
                 m_IsCameraOpen = true;
             }
 
